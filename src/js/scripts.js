@@ -10,6 +10,7 @@ const donkeyURL = new URL('../assets/Donkey.gltf', import.meta.url);
 const renderer = new THREE.WebGLRenderer();
 renderer.setClearColor(0xA3A3A3)
 renderer.shadowMap.enabled = true
+renderer.antialias = true
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -31,16 +32,13 @@ const orbit = new OrbitControls(camera, renderer.domElement);
 camera.position.set(7, 4, 7);
 orbit.update();
 
-const grid = new THREE.GridHelper(30, 30);
-scene.add(grid);
-
 const ambientLight = new THREE.AmbientLight(0x999999)
 scene.add(ambientLight)
 
 const options = {
-    spotlightX: 0,
-    spotlightY: 8,
-    spotlightZ: 4,
+    spotlightX: -1.4,
+    spotlightY: 9.5,
+    spotlightZ: .8,
     spotlightIntensity: 1.2,
     spotlightAngle: .45,
     spotlgihtPenumbra : .3,
@@ -48,7 +46,6 @@ const options = {
 }
 
 const spotlight = new THREE.SpotLight(0xFFFFFF)
-scene.add(spotlight)
 spotlight.castShadow = true
 
 const spotlightHelper = new THREE.SpotLightHelper(spotlight)
@@ -60,6 +57,7 @@ spotlight.shadow.camera.near = 5
 spotlight.shadow.camera.far = 10
 spotlight.shadow.focus = 1
 
+scene.add(spotlight)
 const planeGeometry = new THREE.PlaneGeometry(30,30)
 const planeMaterial = new THREE.MeshStandardMaterial({ color : 0xFFFFFF, side: THREE.DoubleSide })
 const plane = new THREE.Mesh(planeGeometry, planeMaterial)
@@ -69,7 +67,6 @@ plane.receiveShadow = true
 
 const assetLoader = new GLTFLoader();
 
-let mixer, action
 assetLoader.load(donkeyURL.href, function(gltf) {
     const model = gltf.scene;
     scene.add(model);
@@ -85,9 +82,9 @@ assetLoader.load(donkeyURL.href, function(gltf) {
         model.getObjectByName('BodyMesh').material.color.setHex(e)
     })
 
-    gui.add(options, "spotlightX", -10, 10)
-    gui.add(options, "spotlightY", -10, 10)
-    gui.add(options, "spotlightZ", -10, 10)
+    gui.add(options, "spotlightX", -20, 20)
+    gui.add(options, "spotlightY", -20, 20)
+    gui.add(options, "spotlightZ", -20, 20)
     gui.add(options, "spotlightIntensity", 0, 2)
     gui.add(options, "spotlightAngle", 0, 1)
     gui.add(options, "spotlgihtPenumbra", 0, 1)
