@@ -4,13 +4,12 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as dat from 'dat.gui'
 
 const gui = new dat.GUI()
-const options = {
-    'Main Light' : 0x7C7C7C
-}
 
 const donkeyURL = new URL('../assets/Donkey.gltf', import.meta.url);
 
 const renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(0xA3A3A3)
+renderer.shadowMap.enabled = true
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -35,12 +34,38 @@ orbit.update();
 const grid = new THREE.GridHelper(30, 30);
 scene.add(grid);
 
-const ambientLight = new THREE.AmbientLight(0xededed, .8)
+const ambientLight = new THREE.AmbientLight(0x999999)
 scene.add(ambientLight)
 
-const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1)
-scene.add(directionalLight)
-directionalLight.position.set(10,11,7)
+const options = {
+    spotlightX: 0,
+    spotlightY: 8,
+    spotlightZ: 4,
+    spotlightIntensity: 1.2,
+    spotlightAngle: .45,
+    spotlgihtPenumbra : .3,
+    'Main Light' : 0x7C7C7C
+}
+
+const spotlight = new THREE.SpotLight(0xFFFFFF)
+scene.add(spotlight)
+spotlight.castShadow = true
+
+const spotlightHelper = new THREE.SpotLightHelper(spotlight)
+scene.add(spotlightHelper)
+
+spotlight.shadow.mapSize.width = 1024
+spotlight.shadow.mapSize.height = 1024
+spotlight.shadow.camera.near = 5
+spotlight.shadow.camera.far = 10
+spotlight.shadow.focus = 1
+
+const planeGeometry = new THREE.PlaneGeometry(30,30)
+const planeMaterial = new THREE.MeshStandardMaterial({ color : 0xFFFFFF, side: THREE.DoubleSide })
+const plane = new THREE.Mesh(planeGeometry, planeMaterial)
+scene.add(plane)
+plane.rotation.x = -.5 * Math.PI
+plane.receiveShadow = true
 
 const assetLoader = new GLTFLoader();
 
@@ -49,17 +74,36 @@ assetLoader.load(donkeyURL.href, function(gltf) {
     const model = gltf.scene;
     scene.add(model);
     
-    console.log(model, model.getObjectByName('BodyMesh'), " MODEL <<<")
+    //console.log(model, model.getObjectByName('BodyMesh'), " MODEL <<<")
+    
+    model.traverse(function (node) {
+        if(node.isMesh)
+            node.castShadow = true
+    })
 
     gui.addColor(options, 'Main Light').onChange(function(e){
         model.getObjectByName('BodyMesh').material.color.setHex(e)
     })
+
+    gui.add(options, "spotlightX", -10, 10)
+    gui.add(options, "spotlightY", -10, 10)
+    gui.add(options, "spotlightZ", -10, 10)
+    gui.add(options, "spotlightIntensity", 0, 2)
+    gui.add(options, "spotlightAngle", 0, 1)
+    gui.add(options, "spotlgihtPenumbra", 0, 1)
+
+    model.scale.set(1,1,1);
     
 }, undefined, function(error) {
     console.error(error);
 });
 
 function animate() {
+    spotlight.position.set(options.spotlightX,options.spotlightY,options.spotlightZ)
+    spotlight.intensity = options.spotlightIntensity
+    spotlight.angle = options.spotlightAngle
+    spotlight.penumbra = options.spotlgihtPenumbra
+    spotlightHelper.update()
     renderer.render(scene, camera);
 }
 
